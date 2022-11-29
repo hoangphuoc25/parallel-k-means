@@ -23,7 +23,7 @@ centroids = [[]]
 X["Cluster"] = kmeans.fit_predict(X)
 X["Cluster"] = X["Cluster"].astype("category")
 X.head()
-X.to_csv(f'airbnb_cluster_{NO_CLUSTER}.csv', columns=['Cluster'])
+X.to_csv(f'airbnb_cluster_{NO_CLUSTER}.csv', columns=['Cluster'], sep='\t')
 print(kmeans.cluster_centers_)
 
 plt.scatter(df['latitude'], df['longitude'], color='k', s=2)
