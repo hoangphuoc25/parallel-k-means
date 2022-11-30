@@ -39,6 +39,6 @@ public:
 
 
 std::unique_ptr<IKMeansRunner> createSimpleRunner();
-std::unique_ptr<IKMeansRunner> createOMPRuner();
+std::unique_ptr<IKMeansRunner> createOMPRunner();
 std::unique_ptr<IKMeansRunner> createCUDARunner();
 std::unique_ptr<IKMeansRunner> createMPIRunner();

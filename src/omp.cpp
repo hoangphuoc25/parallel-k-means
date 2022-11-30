@@ -3,15 +3,15 @@
 #include <algorithm>
 #include <iostream>
 
-// #include <omp.h>
+#include <omp.h>
 #include <numeric>
 #include <math.h>
 
-float distance(Point p1, Point p2) {
+float distance2(Point p1, Point p2) {
   return sqrt(pow(p1.x-p2.x, 2) + pow(p1.y-p2.y, 2));
 }
 
-class SimpleKMeansRunner : public IKMeansRunner {
+class OMPKMeansRunner : public IKMeansRunner {
 public:
   virtual void run(std::vector<Point> &data,
                   std::vector<Point> &centroids,
@@ -22,37 +22,46 @@ public:
     float *sumX = new float[centroids.size()];
     float *sumY = new float[centroids.size()];
 
+    for (size_t i=0; i < centroids.size(); i++) {
+      count[i] = 0;
+      sumX[i] = 0.0f;
+      sumY[i] = 0.0f;
+    }
+
     Timer timer;
-    // printf("with omp\n");
-    // #pragma omp parallel for
-    for (size_t i=0; i < data.size(); i++) {
+    printf("with omp\n");
+    int datasize = data.size();
+    int centroidsize = centroids.size();
+
+    #pragma omp parallel for schedule(static)
+    for (size_t i=0; i < datasize; i++) {
       float minDistance=0;
       int group = 0;
-      for (size_t j=0; j < centroids.size(); j++) {
-        float dist = distance(data[i], centroids[j]);
+      for (size_t j=0; j < centroidsize; j++) {
+        float dist = distance2(data[i], centroids[j]);
         if (dist < minDistance) {
           group = j;
           minDistance = dist;
         }
       }
-      // if (i%1000 == 0) {
-      //   printf("%d\n", i);
-      // }
       labels[i] = group;
+    } // end for
+
+    for (size_t i=0; i < datasize; i++) {
+      int group = labels[i];
       count[group] += 1;
       sumX[group] += data[i].x;
       sumY[group] += data[i].y;
     }
+  
     times.labellingTime += timer.elapsed();
-
-    timer.reset(); 
     for (size_t i=0; i < centroids.size(); i++) {
       newCentroids.push_back(Point{.id=static_cast<int>(i), .x=sumX[i]/count[i], .y=sumY[i]/count[i]});
     }
-    times.newCentroidTime += timer.elapsed();
   }
+  
 };
 
-std::unique_ptr<IKMeansRunner> createSimpleRunner() {
-  return std::make_unique<SimpleKMeansRunner>();
+std::unique_ptr<IKMeansRunner> createOMPRunner() {
+  return std::make_unique<OMPKMeansRunner>();
 }

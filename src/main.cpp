@@ -16,6 +16,7 @@ struct StartupOptions {
   std::string inputFile;
   std::string centroidFile;
   bool checkCorrectness = false;
+  bool useOMP = false;
 };
 
 std::string removeQuote(std::string input) {
@@ -44,6 +45,8 @@ StartupOptions parseOptions(int argc, const char **argv) {
         rs.numPoints = atoi(argv[i + 1]);
       else if (strcmp(argv[i], "-o") == 0)
         rs.outputFile = argv[i + 1];
+      else if (strcmp(argv[i], "-omp") == 0)
+        rs.useOMP = true;
       // else if (strcmp(argv[i], "-ref") == 0)
       //   rs.referenceAnswerDir = removeQuote(argv[i + 1]);
     }
@@ -77,8 +80,15 @@ int main(int argc, const char **argv) {
     printf("%f %f\n", w.centroids[i].x, w.centroids[i].y);
   }
   w.kMeansRunner = createSimpleRunner();
+  if (options.useOMP) {
+    w.kMeansRunner = createOMPRunner();
+  }
+
+  printf("data.size=%d centroids.size=%d\n", w.data.size(), w.centroids.size());
+
   for (int i=0; i < options.numIterations; i++) {
     std::vector<int> labels;
+    labels.resize(w.data.size());
     std::vector<Point> newCentroids;
     TimeCost tc;
     w.kMeansRunner -> run(
