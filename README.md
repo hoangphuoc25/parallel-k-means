@@ -20,7 +20,7 @@ Test data was generated with make_blobs. There generated test files used for per
 - small.csv (1.6 million data points, 12 clusters)
 - large.csv (16 million data points, 32 clusters)
 
-![Large dataset](dataset.jpg)
+![Large dataset](dataset.png)
 
 ## Benchmarking and comparison
 
