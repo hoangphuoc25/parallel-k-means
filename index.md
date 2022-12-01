@@ -7,15 +7,8 @@ Team member: Robert Truong \<hoangpht>
 
 Project website is available at [https://hoangphuoc25.github.io/15618-project](https://hoangphuoc25.github.io/15618-project)
 
-<details>
-	<summary>abc</summary>
 
-	1
-	2
-	3
-</details>
-
-## Option 1: Parallel k-means clustering
+# Parallel k-means clustering
 
 ## Summary
 
@@ -72,10 +65,10 @@ Test data:
 
 12/11-12/18: Finish report and demo
 
-  
+## Updates:
+1. I will parallelize k-means clustering algorithm for the project.
+2. The dataset used for performance benchmarking will be generated instead of collecting from public sources.
 
-## Option 2: Parallel Fast Fourier Transform
+## Project midterm report
 
-## Option 3: Parallel Fluid Simulation/Wave Simulation
-
-## Option 4: Parallel MST
+The midterm report is available [here](https://drive.google.com/file/d/1mPvtaXefN5sY9G1h6jy3d-97l_mSWNO1/view?usp=share_link)
