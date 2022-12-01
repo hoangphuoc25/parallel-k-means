@@ -14,6 +14,11 @@ The available options are:
 - -mpi: run K-Means algorithm parallelized using MPI
 - -cuda: run K-Means algorithm parallelized using MPI
 
+Sample command:
+```
+# ./kmeans -omp -k 32 -i 10 -in 16mil.csv -ce 16mil_centroids.csv -n 16000000
+```
+
 ## Test data
 
 Test data was generated with make_blobs. There generated test files used for performance benchmarking are:
