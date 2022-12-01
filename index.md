@@ -5,7 +5,7 @@ Team member: Robert Truong \<hoangpht>
 
 ## Project website
 
-Project website is available at [https://hoangphuoc25.github.io/15618-project](https://hoangphuoc25.github.io/15618-project)
+Project website is available at [https://hoangphuoc25.github.io/15618-project](https://hoangphuoc25.github.io/15618-project). The source code is at [15618-project](https://github.com/hoangphuoc25/15618-project) 
 
 
 # Parallel k-means clustering
