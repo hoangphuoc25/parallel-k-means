@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <iostream>
 
-// #include <omp.h>
 #include <numeric>
 #include <math.h>
 
@@ -23,8 +22,7 @@ public:
     float *sumY = new float[centroids.size()];
 
     Timer timer;
-    // printf("with omp\n");
-    // #pragma omp parallel for
+
     for (size_t i=0; i < data.size(); i++) {
       float minDistance=0;
       int group = 0;
@@ -35,9 +33,6 @@ public:
           minDistance = dist;
         }
       }
-      // if (i%1000 == 0) {
-      //   printf("%d\n", i);
-      // }
       labels[i] = group;
       count[group] += 1;
       sumX[group] += data[i].x;
