@@ -1,30 +1,38 @@
 
-# 15618 Project Proposal
+# 15618 Project - parallel k-means clustering
 
 Team member: Robert Truong \<hoangpht>
 
 ## Project website
 
-Project website is available at [https://hoangphuoc25.github.io/15618-project](https://hoangphuoc25.github.io/15618-project). The source code is at [15618-project](https://github.com/hoangphuoc25/15618-project) 
+Project website is [https://hoangphuoc25.github.io/15618-project](https://hoangphuoc25.github.io/15618-project). The source code is on [github](https://github.com/hoangphuoc25/15618-project) 
 
-
-# Parallel k-means clustering
 
 ## Summary
 
-I will implement parallelized versions of the k-means clustering algorithm on different targets (CPU/GPU) and perform thorough analysis.
+I will implement parallelized versions of the k-means clustering algorithm on different targets (CPU/GPU) using different tools (OpenMP/ISPC/MPI/CUDA) and perform thorough analysis.
 
 ## Background
 
-K-means clustering is an important unsupervised machine learning method that is being used widely in data mining to group data points together and potentially find something in common among the data in the same group.
+K-means clustering is an important unsupervised machine learning method that is being used widely in data mining to group data points together and potentially find something in common among the data in the same group. The algorithm attempts to group data points using a loop with 2 steps:
+
+- Assign a label to each data point based on the centroid nearest to it
+- Calculate new centroids
+
+In practice, the number of data points can be very large and thus, step 1 will take a significant amount of time. However, it can be parallelized as there is no dependency between computation for each data point. In this project, I will attempt to parallelize the algorithm using OpenMP, MPI and CUDA.
+
 
 ## Challenges
 
 Naive k-means doesn't guarantee convergence to global optimum, often depending on the initialization of centroids. There are variations of the naive algorithm that makes it easier to choose centroids (e.g., k-means++) and allows the algorithm to converge faster, and I'm planning to implement it as part of the optimization.
 
-  
+Another challenge is handling load imbalance. We have to handle all cases and aim to achieve a reasonable speedup in the case of heavily skewed data or lots of outliers. I plan to use different techniques/tools learned in class to reduce the communication and handle load better.
 
-Another challenge is handling load imbalance. We have to handle all cases and aim to achieve a reasonable speedup in the case of heavily skewed data or lots of outliers.
+Specifically, the task of assigning a new label for each point in each iteration is more computationally expensive than the task of computing new centroid positions. There's a few ways to parallelize it:
+
+- Parallelize the loop with OpenMP or CUDA: for each data point, loop through all centroids and find the nearest centroid. 
+- (MPI/CUDA) Each process is responsible for one centroid. At the beginning of each iteration, each process communicates its centroid with other processes and calculates new boundaries, then uses new boundaries to calculate among the current points assigned to it, which points lie outside its region and send those to the correct process.
+
 
 ## Resources
 
@@ -53,13 +61,13 @@ Test data:
 
 ## Schedule
 
-11/9-11/13: Finalize project topic,
+11/9-11/13: Finalize project topic.
 
-11/14-11/20: Research available literature, finish sequential implementation, generate large test cases for performance comparison
+11/14-11/20: Research available literature, finish sequential implementation, generate large test cases for performance comparison.
 
-11/21-11/27: Complete first parallel implementation (OpenMP), and start optimization
+11/21-11/27: Complete first parallel implementation (OpenMP), and start optimization.
 
-11/28-12/3: Finish checkpoint, start second parallel implementation
+11/28-12/3: Finish checkpoint, start second parallel implementation.
 
 12/4-12/10: Finish second parallel implementation, start optimization and perform thorough analysis
 
