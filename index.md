@@ -1,4 +1,3 @@
-
 # 15618 Project - parallel k-means clustering
 
 Team member: Robert Truong \<hoangpht>
@@ -17,7 +16,7 @@ I will implement parallelized versions of the k-means clustering algorithm on di
 K-means clustering is an important unsupervised machine learning method that is being used widely in data mining to group data points together and potentially find something in common among the data in the same group. The algorithm attempts to group data points using a loop with 2 steps:
 
 - Assign a label to each data point based on the centroid nearest to it
-- Calculate new centroids
+- Calculate new centroids of each label using the points assigned in previous step
 
 In practice, the number of data points can be very large and thus, step 1 will take a significant amount of time. However, it can be parallelized as there is no dependency between computation for each data point. In this project, I will attempt to parallelize the algorithm using OpenMP, MPI and CUDA.
 
