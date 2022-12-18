@@ -12,11 +12,11 @@ The available options are:
 - -n: number of data points
 - -omp: run K-Means algorithm parallelized using OpenMP
 - -mpi: run K-Means algorithm parallelized using MPI
-- -cuda: run K-Means algorithm parallelized using MPI
 
 Sample command:
 ```
-# ./kmeans -omp -k 32 -i 10 -in 16mil.csv -ce 16mil_centroids.csv -n 16000000
+$ ./kmeans -omp -k 32 -i 10 -in 16mil.csv -ce 16mil_centroids.csv -n 16000000
+$ mpirun -n 32 kmeans -mpi -k 32 -i 10 -in 16mil.csv -ce 16mil_centroids.csv -n 16000000
 ```
 
 ## Test data
