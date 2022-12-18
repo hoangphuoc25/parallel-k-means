@@ -24,7 +24,7 @@ public:
     Timer timer;
 
     for (size_t i=0; i < data.size(); i++) {
-      float minDistance=0;
+      float minDistance=distance(data[0], centroids[0]);
       int group = 0;
       for (size_t j=0; j < centroids.size(); j++) {
         float dist = distance(data[i], centroids[j]);

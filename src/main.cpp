@@ -250,19 +250,12 @@ int main(int argc, const char **argv) {
       MPI_Recv(&recvSizeBuffer[i],1,MPI_INT, i, sizeTag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
 
-    // printf("recvSizeBuffer pid=%d ", pid);
-    // for (int i=0; i < options.numCluster; i++) {
-    //   printf("%d ", recvSizeBuffer[i]);
-    // }
-    // printf("\n");
-
     int countReqs2 = 0;
     for (int i=0; i < options.numCluster; i++) {
       if (sendSizes[i] > 0) {
         countReqs2+=1;
       }
     }
-    // printf("pid=%d iter=%d countReqs2=%d\n",pid, iterCount,countReqs2);
     
     if (countReqs2 > 0) {
       MPI_Request reqs2[countReqs2];
@@ -277,9 +270,7 @@ int main(int argc, const char **argv) {
       MPI_Waitall(countReqs2, reqs2, MPI_STATUSES_IGNORE);
     }
     
-    // printf("pid=%d iter=%d before maxbuffersize\n", pid, iterCount);
     int maxBufferSize = *std::max_element(recvSizeBuffer.begin(), recvSizeBuffer.end());
-    // printf("pid=%d iter=%d maxBufferSize=%d\n", pid, iterCount, maxBufferSize);
     std::vector<Point> newPointRecvBuffer(maxBufferSize);
     for (int i=0; i < options.numCluster; i++) {
       if (recvSizeBuffer[i] > 0) {
@@ -290,26 +281,12 @@ int main(int argc, const char **argv) {
       }
     }
     ownPoints = newOwnPoints;
-    // printf("pid=%d finished iter=%d\n", pid, iterCount);
     if (pid == 0) {
       printf("elapsed: %f \n", timer.elapsed());
     }
-    // for (int i=0; i < newOwnPoints.size(); i++) {
-    //   sumX += newOwnPoints[i].x; 
-    //   sumY += newOwnPoints[i].y;
-    // }
   }
-  // printf("pid=%d after=%d\n", pid, newOwnPoints.size());
-
-  // printf("mpirecv pid=%d ", pid);
-  // for (int i=0; i < options.numCluster; i++) {
-  //   printf("%d ", recvSizeBuffer[i]);
-  // }
-  // printf("\n");
-
   
-
-
+  
   // MPI_Request reqs[options.numCluster-1];
   // for (int i=0;i < options.numCluster; i++) {
   //   printf("%d ", count[i]);

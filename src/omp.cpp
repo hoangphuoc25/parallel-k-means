@@ -33,9 +33,9 @@ public:
     int datasize = data.size();
     int centroidsize = centroids.size();
 
-    #pragma omp parallel for schedule(static)
+    #pragma omp parallel for schedule(static) reduction(+:sumX[:centroidsize]) reduction(+:sumY[:centroidsize]) reduction(+:count[:centroidsize]) 
     for (size_t i=0; i < datasize; i++) {
-      float minDistance=0;
+      float minDistance=distance2(data[0], centroids[0]);
       int group = 0;
       for (size_t j=0; j < centroidsize; j++) {
         float dist = distance2(data[i], centroids[j]);
@@ -45,14 +45,10 @@ public:
         }
       }
       labels[i] = group;
-    } // end for
-
-    for (size_t i=0; i < datasize; i++) {
-      int group = labels[i];
-      count[group] += 1;
       sumX[group] += data[i].x;
       sumY[group] += data[i].y;
-    }
+      count[group] += 1;
+    } // end for
   
     times.labellingTime += timer.elapsed();
     for (size_t i=0; i < centroids.size(); i++) {

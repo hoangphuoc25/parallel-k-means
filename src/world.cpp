@@ -5,6 +5,14 @@
 #include <sstream>
 #include <stdlib.h>
 #include <string>
+#include <algorithm>
+
+bool compare(Point a, Point b) {
+  if (a.x != b.x) {
+    return a.x < b.x;
+  }
+  return a.y < b.y;
+}
 
 bool World::loadData(std::string fileName) {
   std::ifstream inFile;
@@ -20,8 +28,6 @@ bool World::loadData(std::string fileName) {
     std::stringstream sstream(line);
     std::string str;
     std::getline(sstream, str, '\t');
-    point.id = (int)atoi(str.c_str());
-    std::getline(sstream, str, '\t');
     point.x = (float)atof(str.c_str());
     std::getline(sstream, str, '\t');
     point.y = (float)atof(str.c_str());
@@ -30,6 +36,7 @@ bool World::loadData(std::string fileName) {
   }
   inFile.close();
   cluster.resize(data.size());
+  // std::sort(data.begin(), data.end(), compare);
   return true;
 }
 bool World::loadCentroids(std::string fileName) {
