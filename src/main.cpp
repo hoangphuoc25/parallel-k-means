@@ -7,6 +7,8 @@
 #include <string.h>
 #include "world.h"
 #include "mpi.h"
+#include "timing.h"
+#include <algorithm>
 
 struct StartupOptions {
   int numIterations = 1;
@@ -169,81 +171,136 @@ int main(int argc, const char **argv) {
     // count[label] += 1;
   }
   // printf("pid=%d ownSize=%d\n", pid, ownPoints.size());
-  Point newCentroid = Point{.x = sumX/ownPoints.size(), .y=sumY/ownPoints.size()};
-  printf("pid=%d newCentroid=%f %f\n", pid, newCentroid.x, newCentroid.y);
 
-  int* sizes = new int[options.numCluster];
-  for (int i =0; i < options.numCluster; i++) {
-    sizes[i] = sizeof(Point);
-  }
-  int* displacements = new int[options.numCluster];
-  displacements[0] = 0;
-  for (int j=0; j<options.numCluster-1; j++){
-    displacements[j+1] = displacements[j] + sizes[j];
-  }
-  std::vector<Point> nextCentroids(options.numCluster);
-  MPI_Allgatherv(&newCentroid, sizeof(Point), MPI_BYTE,
-    nextCentroids.data(), sizes, displacements, MPI_BYTE, MPI_COMM_WORLD);
-  
-  
-  std::vector<std::vector<Point>> belongToOtherCluster(options.numCluster);
-  std::vector<Point> newOwnPoints;
-  
-  sumX = 0.0f;
-  sumY = 0.0f;
-  for (int i=0; i < ownPoints.size(); i++) {
-    float minDistance=distance(ownPoints[i], nextCentroids[0]);
-    int label = 0;
-    for (size_t j=0; j < w.centroids.size(); j++) {
-      float dist = distance(ownPoints[i], w.centroids[j]);
-      if (dist < minDistance) {
-        label = j;
-        minDistance = dist;
+  for (int iterCount=0; iterCount < options.numIterations; iterCount++) {
+    Timer timer;
+    Point newCentroid = Point{.x = sumX/ownPoints.size(), .y=sumY/ownPoints.size()};
+    // printf("pid=%d newCentroid=%f %f iter=%d\n", pid, newCentroid.x, newCentroid.y, iterCount);
+
+    int* sizes = new int[options.numCluster];
+    for (int i =0; i < options.numCluster; i++) {
+      sizes[i] = sizeof(Point);
+    }
+    int* displacements = new int[options.numCluster];
+    displacements[0] = 0;
+    for (int j=0; j<options.numCluster-1; j++){
+      displacements[j+1] = displacements[j] + sizes[j];
+    }
+    std::vector<Point> nextCentroids(options.numCluster);
+    MPI_Allgatherv(&newCentroid, sizeof(Point), MPI_BYTE,
+      nextCentroids.data(), sizes, displacements, MPI_BYTE, MPI_COMM_WORLD);
+    
+    
+    std::vector<std::vector<Point>> belongToOtherCluster(options.numCluster);
+    std::vector<Point> newOwnPoints;
+    
+    sumX = 0.0f;
+    sumY = 0.0f;
+    for (int i=0; i < ownPoints.size(); i++) {
+      float minDistance=distance(ownPoints[i], nextCentroids[0]);
+      int label = 0;
+      for (size_t j=0; j < w.centroids.size(); j++) {
+        float dist = distance(ownPoints[i], w.centroids[j]);
+        if (dist < minDistance) {
+          label = j;
+          minDistance = dist;
+        }
+      }
+      if (label == pid) {
+        newOwnPoints.push_back(ownPoints[i]);
+        sumX += ownPoints[i].x;
+        sumY += ownPoints[i].y;
+      } else {
+        belongToOtherCluster[label].push_back(ownPoints[i]);
       }
     }
-    if (label == pid) {
-      newOwnPoints.push_back(ownPoints[i]);
-      sumX += ownPoints[i].x;
-      sumY += ownPoints[i].y;
-    } else {
-      belongToOtherCluster[label].push_back(ownPoints[i]);
+    // printf("belongToOtherCluster pid=%d ", pid);
+    // for (int i = 0;i < options.numCluster; i++) {
+    //   printf("%d ", belongToOtherCluster[i].size());
+    // }
+    // printf("\n");
+    std::vector<int> sendSizes(options.numCluster);
+    for (int i=0; i < options.numCluster; i++) {
+      sendSizes[i] = belongToOtherCluster[i].size();
     }
-  }
-  // printf("belongToOtherCluster pid=%d ", pid);
-  // for (int i = 0;i < options.numCluster; i++) {
-  //   printf("%d ", belongToOtherCluster[i].size());
-  // }
-  // printf("\n");
-  std::vector<int> sendSizes(options.numCluster);
-  for (int i=0; i < options.numCluster; i++) {
-    sendSizes[i] = belongToOtherCluster[i].size();
-  }
-  // printf("sendSizes pid=%d ", pid);
-  // for (int i=0; i < options.numCluster; i++) {
-  //   printf("%d ", sendSizes[i]);
-  // }
-  // printf("\n");
+    // printf("sendSizes pid=%d ", pid);
+    // for (int i=0; i < options.numCluster; i++) {
+    //   printf("%d ", sendSizes[i]);
+    // }
+    // printf("\n");
 
-  MPI_Request reqs[options.numCluster-1];
-  int reqIdx = 0;
-  for (int i=0; i < options.numCluster; i++) {
-    if (i == pid) {
-      continue;
+    MPI_Request reqs[options.numCluster-1];
+    int reqIdx = 0;
+    for (int i=0; i < options.numCluster; i++) {
+      if (i == pid) {
+        continue;
+      }
+      MPI_Isend(sendSizes.data()+i, 1, MPI_INT, i, sizeTag, MPI_COMM_WORLD, &reqs[reqIdx++]);
     }
-    printf("pid=%d i=%d\n", pid, i);
-    MPI_Isend(sendSizes.data()+i, 1, MPI_INT, i, sizeTag, MPI_COMM_WORLD, &reqs[reqIdx++]);
-  }
-  MPI_Waitall(options.numCluster-1, reqs, MPI_STATUSES_IGNORE);
+    MPI_Waitall(options.numCluster-1, reqs, MPI_STATUSES_IGNORE);
 
-  // std::vector<int> recvSizeBuffer(options.numCluster);
-  // std::vector<Point> recvBuffer;
-  // for (int i=0; i < options.numCluster; i++) {
-  //   recvBuffer.clear();
-  //   if (i == pid) {
-  //     continue;
-  //   }
-  //   MPI_Recv(&recvSizeBuffer[i],1,MPI_INT, i, sizeTag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-  // }
+    std::vector<int> recvSizeBuffer(options.numCluster);
+    std::vector<Point> recvBuffer;
+    for (int i=0; i < options.numCluster; i++) {
+      
+      recvBuffer.clear();
+      if (i == pid) {
+        continue;
+      }
+      MPI_Recv(&recvSizeBuffer[i],1,MPI_INT, i, sizeTag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // printf("recvSizeBuffer pid=%d ", pid);
+    // for (int i=0; i < options.numCluster; i++) {
+    //   printf("%d ", recvSizeBuffer[i]);
+    // }
+    // printf("\n");
+
+    int countReqs2 = 0;
+    for (int i=0; i < options.numCluster; i++) {
+      if (sendSizes[i] > 0) {
+        countReqs2+=1;
+      }
+    }
+    // printf("pid=%d iter=%d countReqs2=%d\n",pid, iterCount,countReqs2);
+    
+    if (countReqs2 > 0) {
+      MPI_Request reqs2[countReqs2];
+      reqIdx = 0;
+      for (int i=0; i < options.numCluster; i++) {
+        if (sendSizes[i] > 0) {
+          // printf("pid=%d sending %d to %d\n", pid, belongToOtherCluster[i].size(), i);
+          MPI_Isend(belongToOtherCluster[i].data(), belongToOtherCluster[i].size()*sizeof(Point), 
+            MPI_BYTE, i, dataTag, MPI_COMM_WORLD, &reqs2[reqIdx++]);
+        }
+      }
+      MPI_Waitall(countReqs2, reqs2, MPI_STATUSES_IGNORE);
+    }
+    
+    // printf("pid=%d iter=%d before maxbuffersize\n", pid, iterCount);
+    int maxBufferSize = *std::max_element(recvSizeBuffer.begin(), recvSizeBuffer.end());
+    // printf("pid=%d iter=%d maxBufferSize=%d\n", pid, iterCount, maxBufferSize);
+    std::vector<Point> newPointRecvBuffer(maxBufferSize);
+    for (int i=0; i < options.numCluster; i++) {
+      if (recvSizeBuffer[i] > 0) {
+        newPointRecvBuffer.clear();
+        MPI_Recv(newPointRecvBuffer.data(), recvSizeBuffer[i]*sizeof(Point), MPI_BYTE, i, dataTag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("pid=%d iter=%d received %d from %d\n", pid, iterCount, recvSizeBuffer[i], i);
+        newOwnPoints.insert(newOwnPoints.end(), newPointRecvBuffer.begin(), newPointRecvBuffer.begin()+recvSizeBuffer[i]);
+      }
+    }
+    ownPoints = newOwnPoints;
+    // printf("pid=%d finished iter=%d\n", pid, iterCount);
+    if (pid == 0) {
+      printf("elapsed: %f \n", timer.elapsed());
+    }
+    // for (int i=0; i < newOwnPoints.size(); i++) {
+    //   sumX += newOwnPoints[i].x; 
+    //   sumY += newOwnPoints[i].y;
+    // }
+  }
+  // printf("pid=%d after=%d\n", pid, newOwnPoints.size());
+
   // printf("mpirecv pid=%d ", pid);
   // for (int i=0; i < options.numCluster; i++) {
   //   printf("%d ", recvSizeBuffer[i]);
