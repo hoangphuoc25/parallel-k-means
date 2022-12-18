@@ -57,8 +57,6 @@ StartupOptions parseOptions(int argc, const char **argv) {
         rs.useMPI = true;
       else if (strcmp(argv[i], "-cuda") == 0)
         rs.useCUDA = true;
-      // else if (strcmp(argv[i], "-ref") == 0)
-      //   rs.referenceAnswerDir = removeQuote(argv[i + 1]);
     }
   }
   return rs;
@@ -103,19 +101,6 @@ int main(int argc, const char **argv) {
     return 0;
   }
 
-  
-
-  // if (options.checkCorrectness) {
-  //   std::cout << "Correctness Checking Enabled";
-  //   refW.nbodySimulator = createSimpleNBodySimulator();
-  //   if (options.inputFile.length())
-  //     refW.loadFromFile(options.inputFile);
-  //   else
-  //     refW.loadFromFile("reference-init.txt");
-  // }
-
-  // std::string simulatorName;
-
   int pid;
   int nproc;
   MPI_Init(&argc, &argv);
@@ -134,13 +119,6 @@ int main(int argc, const char **argv) {
   if (options.centroidFile.length()) {
     w.loadCentroids(options.centroidFile);
   }
-  // for (int i = 0; i < 10; i++) {
-  //   printf("ct: %f %f\n", w.centroids[i].x, w.centroids[i].y);
-  // }
-  // for (int i = 0; i < 10; i++) {
-  //   printf("datA: %f %f\n", w.data[i].x, w.data[i].y);
-  // }
-  // printf("centroids size %d\n", w.centroids.size());
 
   int *count = new int[w.centroids.size()];
   for (int i=0; i < w.centroids.size(); i++) {
@@ -167,15 +145,11 @@ int main(int argc, const char **argv) {
       sumX += w.data[i].x;
       sumY += w.data[i].y;
     }
-    // w.cluster[i] = label;
-    // count[label] += 1;
   }
-  // printf("pid=%d ownSize=%d\n", pid, ownPoints.size());
 
   for (int iterCount=0; iterCount < options.numIterations; iterCount++) {
     Timer timer;
     Point newCentroid = Point{.x = sumX/ownPoints.size(), .y=sumY/ownPoints.size()};
-    // printf("pid=%d newCentroid=%f %f iter=%d\n", pid, newCentroid.x, newCentroid.y, iterCount);
 
     int* sizes = new int[options.numCluster];
     for (int i =0; i < options.numCluster; i++) {
@@ -214,20 +188,11 @@ int main(int argc, const char **argv) {
         belongToOtherCluster[label].push_back(ownPoints[i]);
       }
     }
-    // printf("belongToOtherCluster pid=%d ", pid);
-    // for (int i = 0;i < options.numCluster; i++) {
-    //   printf("%d ", belongToOtherCluster[i].size());
-    // }
-    // printf("\n");
+    
     std::vector<int> sendSizes(options.numCluster);
     for (int i=0; i < options.numCluster; i++) {
       sendSizes[i] = belongToOtherCluster[i].size();
     }
-    // printf("sendSizes pid=%d ", pid);
-    // for (int i=0; i < options.numCluster; i++) {
-    //   printf("%d ", sendSizes[i]);
-    // }
-    // printf("\n");
 
     MPI_Request reqs[options.numCluster-1];
     int reqIdx = 0;
@@ -285,84 +250,5 @@ int main(int argc, const char **argv) {
       printf("elapsed: %f \n", timer.elapsed());
     }
   }
-  
-  
-  // MPI_Request reqs[options.numCluster-1];
-  // for (int i=0;i < options.numCluster; i++) {
-  //   printf("%d ", count[i]);
-  // }
-  // printf("\n");
 
-  // for (int i = 1; i < options.numCluster; i++) {
-  //   MPI_Isend(&count[i], 1, MPI_INT, i, sizeTag, MPI_COMM_WORLD, &reqs[i-1]);
-  // }
-  // MPI_Waitall(options.numCluster-1, reqs, MPI_STATUSES_IGNORE);
-  // MPI_Request reqs2[options.numCluster-1];
-  // for (int clusterId=1; clusterId < options.numCluster; clusterId++) {
-  //   std::vector<Point> initialCluster(count[i]);
-  //   for (int pointId=0; pointId < w.data.size(); pointId++) {
-  //     if (w.cluster[pointId] == clusterId) {
-  //       initialCluster.append(w.data[pointId])
-  //     }
-  //   }
-  // }
-
-  
-  MPI_Finalize();
-  return 0;
-
-  // switch (options.simulatorType) {
-  // case SimulatorType::Simple:
-  //   w.nbodySimulator = createSimpleNBodySimulator();
-  //   simulatorName = "Simple";
-  //   break;
-  // case SimulatorType::Sequential:
-  //   w.nbodySimulator = createSequentialNBodySimulator();
-  //   simulatorName = "Sequential";
-  //   break;
-  // case SimulatorType::Parallel:
-  //   w.nbodySimulator = createParallelNBodySimulator();
-  //   simulatorName = "Parallel";
-  //   break;
-  // }
-  // std::cout << simulatorName << "\n";
-  // StepParameters stepParams;
-  // stepParams = getBenchmarkStepParams(options.spaceSize);
-
-  // // run the implementation
-  // bool fullCorrectness = true;
-  // TimeCost totalTimeCost;
-  // for (int i = 0; i < options.numIterations; i++) {
-  //   TimeCost timeCost;
-  //   TimeCost timeCostRef;
-  //   w.simulateStep(stepParams, timeCost);
-  //   totalTimeCost.treeBuildingTime += timeCost.treeBuildingTime;
-  //   totalTimeCost.simulationTime += timeCost.simulationTime;
-  //   if (options.checkCorrectness) {
-  //     refW.simulateStep(stepParams, timeCostRef);
-  //     bool correct = checkForCorrectness(simulatorName, refW, w, "",
-  //                                        options.numParticles, stepParams);
-  //     if (correct != true)
-  //       fullCorrectness = false;
-  //   }
-  //   // displayIterationPerformance(i, timeCost);
-
-  //   // generate simulation image
-  //   if (options.frameOutputStyle == FrameOutputStyle::AllFrames) {
-  //     std::stringstream sstream;
-  //     sstream << options.bitmapOutputDir;
-  //     if (!options.bitmapOutputDir.size() ||
-  //         (options.bitmapOutputDir.back() != '\\' &&
-  //          options.bitmapOutputDir.back() != '/'))
-  //       sstream << "/";
-  //     sstream << i << ".bmp";
-  //     w.dumpView(sstream.str(), options.viewportRadius);
-  //   }
-  // }
-  // displayTotalPerformance(options.numIterations, totalTimeCost);
-
-  // if (options.outputFile.length()) {
-  //   w.saveToFile(options.outputFile);
-  // }
-  // return !fullCorrectness;
 }

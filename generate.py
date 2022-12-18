@@ -6,7 +6,8 @@ import numpy as np
 
 from sklearn.datasets import make_blobs
 
-X, y_true = make_blobs(n_samples=16000000, centers=32,
+NO_CLUSTER=12 
+X, y_true = make_blobs(n_samples=1600000, centers=NO_CLUSTER,
                        cluster_std=6
                        , random_state=0, center_box=(-100, 100))
 
@@ -22,7 +23,7 @@ plt.rc(
 )
 
 plt.scatter(X[:, 0], X[:, 1], s=2)
-NO_CLUSTER=32 
+
 kmeans = KMeans(n_clusters=NO_CLUSTER)                                                                                                       
 kmeans.fit(X)
 centroids = kmeans.cluster_centers_
@@ -36,7 +37,7 @@ plt.scatter(
     zorder=10, 
 )
 
-kmeans = KMeans(n_clusters=32) 
+kmeans = KMeans(n_clusters=NO_CLUSTER) 
 kmeans.fit(X)
 y_kmeans = kmeans.predict(X)
 
@@ -45,5 +46,5 @@ centers = kmeans.cluster_centers_
 plt.scatter(centers[:, 0], centers[:, 1], c='red', s=20, alpha=0.5)
 # plt.savefig('dataset.png')
 
-np.savetxt('large.csv', X, delimiter='\t', fmt='%2.5f')
-np.savetxt('large_centroids.csv', centers, delimiter='\t', fmt='%2.5f')
+np.savetxt('small.csv', X, delimiter='\t', fmt='%2.5f')
+np.savetxt('small_centroids.csv', centers, delimiter='\t', fmt='%2.5f')
