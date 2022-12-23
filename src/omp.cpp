@@ -54,8 +54,11 @@ public:
     for (size_t i=0; i < centroids.size(); i++) {
       newCentroids.push_back(Point{.id=static_cast<int>(i), .x=sumX[i]/count[i], .y=sumY[i]/count[i]});
     }
+
+    delete [] count;
+    delete [] sumX;
+    delete [] sumY;
   }
-  
 };
 
 std::unique_ptr<IKMeansRunner> createOMPRunner() {
